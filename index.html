@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>云上兰德勒 · Für CN</title>
+<meta name="description" content="《云上兰德勒》Ländler über den Wolken —— 为独奏小提琴、竖琴、钢琴与弦乐而作。Für CN。">
+<meta property="og:title" content="云上兰德勒 · Für CN">
+<meta property="og:description" content="Ländler über den Wolken">
+<meta property="og:image" content="media/cover.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Noto+Serif+SC:wght@400;600;700&display=swap">
+<style>
+/* 一页纸的音乐会节目单：珠光白纸面，宋体标题，意大利斜体做注释，香槟金只用在细线上 */
+:root {
+  --pearl-hi: #fcfbf8; --pearl: #f6f4f0; --pearl-lo: #eeebe6;
+  --ink: #222024; --stone: #8f8a83; --hair: #e2ddd5; --gold: #b0925f; --gold-soft: #e8cd96;
+  --serif-cn: "Noto Serif SC", "Songti SC", "STSong", serif;
+  --serif-it: "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pearl-hi: #1e1d20; --pearl: #19181b; --pearl-lo: #141316;
+    --ink: #eeeae4; --stone: #a19b93; --hair: #2e2c30; --gold: #d2b47e; --gold-soft: #6b5733;
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+html { background: var(--pearl); }
+body {
+  margin: 0; color: var(--ink); font-family: var(--serif-cn); line-height: 1.75;
+  background:
+    radial-gradient(ellipse 80% 60% at 48% 30%, var(--pearl-hi), transparent 70%),
+    linear-gradient(135deg, rgba(232, 200, 196, .14), transparent 45%, rgba(190, 205, 228, .14)),
+    var(--pearl);
+  background-attachment: fixed;
+  padding-left: max(20px, env(safe-area-inset-left)); padding-right: max(20px, env(safe-area-inset-right));
+}
+main { max-width: 1120px; margin: 0 auto; }
+.it { font-family: var(--serif-it); font-style: italic; }
+
+header { text-align: center; padding: clamp(72px, 14vh, 140px) 0 clamp(48px, 8vh, 80px); }
+.ded { font-family: var(--serif-it); font-style: italic; font-size: 22px; color: var(--stone); letter-spacing: .04em; }
+h1 { font-weight: 700; font-size: clamp(48px, 9vw, 104px); letter-spacing: .08em; margin: 10px 0 0; line-height: 1.2; }
+.sub { font-family: var(--serif-it); font-style: italic; font-size: clamp(22px, 3.2vw, 34px); color: var(--stone); margin-top: 6px; }
+.rule { width: 72px; height: 2px; background: var(--gold); margin: 34px auto 22px; border: 0; }
+.inst { font-family: var(--serif-it); font-style: italic; color: var(--stone); font-size: 19px; letter-spacing: .03em; }
+
+section { margin: 0 0 clamp(64px, 10vh, 112px); }
+h2 { font-weight: 600; font-size: 15px; letter-spacing: .32em; color: var(--stone); text-align: center; margin: 0 0 28px; }
+h2 .it { letter-spacing: .06em; font-size: 19px; margin-left: .6em; }
+
+.film { border-radius: 4px; overflow: hidden; box-shadow: 0 30px 80px -40px rgba(60, 50, 40, .35), 0 0 0 1px var(--hair); background: var(--pearl-hi); }
+.film video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; background: var(--pearl-hi); }
+.note { text-align: center; color: var(--stone); font-size: 14px; margin-top: 14px; }
+
+.listen { max-width: 720px; margin: 0 auto; text-align: center; }
+.listen audio { width: 100%; margin-top: 4px; }
+
+.movements { max-width: 720px; margin: 0 auto; border-top: 1px solid var(--hair); }
+.mv { display: grid; grid-template-columns: 3.2em 1fr auto; align-items: baseline; gap: 18px; padding: 16px 4px;
+  border-bottom: 1px solid var(--hair); cursor: pointer; background: none; border-left: 0; border-right: 0; border-top: 0;
+  width: 100%; font: inherit; color: inherit; text-align: left; }
+.mv:hover, .mv:focus-visible { background: rgba(176, 146, 95, .07); outline: none; }
+.mv .l { font-family: var(--serif-it); font-size: 22px; color: var(--gold); text-align: center; }
+.mv .n { font-family: var(--serif-it); font-style: italic; font-size: 24px; }
+.mv .n small { font-family: var(--serif-cn); font-style: normal; font-size: 15px; color: var(--stone); margin-left: 12px; }
+.mv time { font-family: var(--serif-it); font-variant-numeric: tabular-nums; color: var(--stone); font-size: 19px; }
+.facts { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 34px; color: var(--stone); font-size: 15px; margin-top: 26px; }
+.facts b { color: var(--ink); font-weight: 600; margin-left: .4em; }
+
+.pages { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 18px; }
+.pages a { display: block; background: #fff; box-shadow: 0 14px 40px -24px rgba(60, 50, 40, .45), 0 0 0 1px var(--hair); transition: transform .25s ease; }
+.pages a:hover, .pages a:focus-visible { transform: translateY(-4px); }
+.pages img { display: block; width: 100%; height: auto; }
+@media (max-width: 760px) { .pages { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+.files { max-width: 720px; margin: 0 auto; border-top: 1px solid var(--hair); }
+.file { display: grid; grid-template-columns: 1fr auto; gap: 4px 20px; padding: 16px 4px; border-bottom: 1px solid var(--hair);
+  color: inherit; text-decoration: none; }
+.file:hover, .file:focus-visible { background: rgba(176, 146, 95, .07); outline: none; }
+.file .t { font-size: 17px; }
+.file .d { grid-column: 1; color: var(--stone); font-size: 14px; }
+.file .s { grid-row: 1 / 3; grid-column: 2; align-self: center; font-family: var(--serif-it); font-style: italic; color: var(--gold); font-size: 18px; }
+
+.colophon { max-width: 720px; margin: 0 auto; color: var(--stone); font-size: 14px; text-align: center; }
+.colophon p { margin: 6px 0; }
+footer { text-align: center; padding: 20px 0 80px; color: var(--stone); }
+footer .ded { font-size: 20px; }
+@media (prefers-reduced-motion: reduce) { .pages a { transition: none; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="ded">Für CN</div>
+    <h1>云上兰德勒</h1>
+    <div class="sub">Ländler über den Wolken</div>
+    <hr class="rule">
+    <div class="inst">Violino solo · Arpa · Pianoforte · Viola · Violoncello</div>
+  </header>
+
+  <section aria-label="演奏">
+    <h2>演奏<span class="it">Esecuzione</span></h2>
+    <div class="film">
+      <video id="film" controls playsinline preload="metadata" poster="media/cover.jpg">
+        <source src="media/Fuer-CN_Laendler-ueber-den-Wolken_4K-master.mp4" type="video/mp4">
+      </video>
+    </div>
+    <p class="note">4K · 3840 × 2160 · 总谱随音乐翻行</p>
+  </section>
+
+  <section aria-label="乐章">
+    <h2>结构<span class="it">Forma</span></h2>
+    <div class="movements" id="movements">
+      <button class="mv" data-t="0"><span class="l">·</span><span class="n">Introduzione<small>引子</small></span><time>0:00</time></button>
+      <button class="mv" data-t="4"><span class="l">A</span><span class="n">Tema<small>主题</small></span><time>0:04</time></button>
+      <button class="mv" data-t="13"><span class="l">B</span><span class="n">Variazione<small>变奏</small></span><time>0:13</time></button>
+      <button class="mv" data-t="22"><span class="l">C</span><span class="n">Trio<small>三声中部</small></span><time>0:22</time></button>
+      <button class="mv" data-t="38"><span class="l">D</span><span class="n">Ripresa<small>再现</small></span><time>0:38</time></button>
+      <button class="mv" data-t="50"><span class="l">E</span><span class="n">Coda<small>尾声</small></span><time>0:50</time></button>
+    </div>
+    <div class="facts">
+      <span>调性<b>D 大调</b></span><span>拍号<b>3/4</b></span><span>速度<b class="it">Tempo di Ländler</b></span><span>时长<b>1′01″</b></span>
+    </div>
+  </section>
+
+  <section aria-label="聆听">
+    <h2>聆听<span class="it">Ascolto</span></h2>
+    <div class="listen">
+      <audio controls preload="none" src="media/Fuer-CN_Laendler-ueber-den-Wolken_24bit-48kHz.wav"></audio>
+      <p class="note">24-bit / 48 kHz 无损母带</p>
+    </div>
+  </section>
+
+  <section aria-label="总谱">
+    <h2>总谱<span class="it">Partitura</span></h2>
+    <div class="pages">
+      <a href="score/Fuer-CN_Laendler-ueber-den-Wolken_score.pdf" aria-label="总谱第 1 页"><img src="score/pages/page-1.png" alt="总谱第 1 页" loading="lazy"></a>
+      <a href="score/Fuer-CN_Laendler-ueber-den-Wolken_score.pdf" aria-label="总谱第 2 页"><img src="score/pages/page-2.png" alt="总谱第 2 页" loading="lazy"></a>
+      <a href="score/Fuer-CN_Laendler-ueber-den-Wolken_score.pdf" aria-label="总谱第 3 页"><img src="score/pages/page-3.png" alt="总谱第 3 页" loading="lazy"></a>
+      <a href="score/Fuer-CN_Laendler-ueber-den-Wolken_score.pdf" aria-label="总谱第 4 页"><img src="score/pages/page-4.png" alt="总谱第 4 页" loading="lazy"></a>
+      <a href="score/Fuer-CN_Laendler-ueber-den-Wolken_score.pdf" aria-label="总谱第 5 页"><img src="score/pages/page-5.png" alt="总谱第 5 页" loading="lazy"></a>
+    </div>
+  </section>
+
+  <section aria-label="下载">
+    <h2>下载<span class="it">Scarica</span></h2>
+    <div class="files">
+      <a class="file" href="score/Fuer-CN_Laendler-ueber-den-Wolken_score.pdf" download><span class="t">总谱 PDF</span><span class="d">A4 · 5 页 · 出版版式</span><span class="s">PDF</span></a>
+      <a class="file" href="media/Fuer-CN_Laendler-ueber-den-Wolken_24bit-48kHz.wav" download><span class="t">无损母带</span><span class="d">24-bit / 48 kHz · 立体声</span><span class="s">WAV</span></a>
+      <a class="file" href="media/Fuer-CN_Laendler-ueber-den-Wolken_320k.mp3" download><span class="t">MP3</span><span class="d">320 kbps · 内嵌封面</span><span class="s">MP3</span></a>
+      <a class="file" href="media/Fuer-CN_Laendler-ueber-den-Wolken_4K-master.mp4" download><span class="t">4K 演奏</span><span class="d">3840 × 2160 · H.264 High · AAC 320k</span><span class="s">MP4</span></a>
+      <a class="file" href="score/Fuer-CN_Laendler-ueber-den-Wolken.mscz" download><span class="t">MuseScore 工程</span><span class="d">可在 MuseScore Studio 中打开、播放与修改</span><span class="s">MSCZ</span></a>
+    </div>
+  </section>
+
+  <section class="colophon" aria-label="制作">
+    <p>作曲以代码写成，用真实乐器采样演奏：小提琴、中提琴、大提琴与竖琴取自 <span class="it">VSCO 2 Community Edition</span>，钢琴取自 <span class="it">Salamander Grand Piano V3</span>（Alexander Holm，CC BY 3.0）。</p>
+    <p>总谱由 MuseScore Studio 排版。</p>
+  </section>
+</main>
+<footer>
+  <div class="ded">Für CN</div>
+</footer>
+<script>
+  // 点结构里的段落，视频跳到那里开始播放
+  const film = document.getElementById("film");
+  document.getElementById("movements").addEventListener("click", (e) => {
+    const row = e.target.closest(".mv");
+    if (!row) return;
+    film.currentTime = Number(row.dataset.t);
+    film.play().catch(() => {});
+    film.scrollIntoView({ behavior: "smooth", block: "center" });
+  });
+</script>
+</body>
+</html>
