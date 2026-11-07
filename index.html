@@ -105,11 +105,9 @@ footer .ded { font-size: 20px; }
   <section aria-label="演奏">
     <h2>演奏<span class="it">Esecuzione</span></h2>
     <div class="film">
-      <video id="film" controls playsinline preload="metadata" poster="media/cover.jpg">
-        <source src="media/Fuer-CN_Laendler-ueber-den-Wolken_1080p-web.mp4" type="video/mp4">
-      </video>
+      <video id="film" controls playsinline preload="metadata" poster="media/cover.jpg" src="media/Fuer-CN_Laendler-ueber-den-Wolken_1080p-light.mp4"></video>
     </div>
-    <p class="note"><span id="quality">1080p 流畅播放</span> · <span id="film-cache">正在缓存…</span> · 总谱随音乐翻行 · <button class="q" id="toggle4k" type="button">切换到 4K 原画</button></p>
+    <p class="note"><span id="quality">1080p</span> · <span id="film-cache">正在缓存…</span> · 总谱随音乐翻行 · <button class="q" id="toggle4k" type="button">切换到 4K 原画</button></p>
   </section>
 
   <section aria-label="乐章">
@@ -130,8 +128,8 @@ footer .ded { font-size: 20px; }
   <section aria-label="聆听">
     <h2>聆听<span class="it">Ascolto</span></h2>
     <div class="listen">
-      <audio id="listen" controls preload="none" src="media/Fuer-CN_Laendler-ueber-den-Wolken_24bit-48kHz.wav"></audio>
-      <p class="note">24-bit / 48 kHz 无损母带 · <span id="audio-cache">正在缓存…</span></p>
+      <audio id="listen" controls preload="none" src="media/Fuer-CN_Laendler-ueber-den-Wolken_320k.mp3"></audio>
+      <p class="note">MP3 320 kbps · 无损 WAV 见下载 · <span id="audio-cache">正在缓存…</span></p>
     </div>
   </section>
 
@@ -162,26 +160,66 @@ footer .ded { font-size: 20px; }
   <div class="ded">Für CN</div>
 </footer>
 <script>
-  // 点结构里的段落，视频跳到那里开始播放
+  // 播放策略（为国内网络设计）：
+  // 1. 线路：同时试 GitHub Pages 和几个 jsDelivr 镜像，各下前 128 KB，谁先完成用谁。
+  // 2. 缓存：选好线路后在后台把视频（约 3.7 MB）和 MP3（约 2.5 MB）完整下载到内存，下完换成内存副本。
+  // 3. 让路：缓存没完成时一旦点了播放，立刻停止后台缓存，把带宽全部留给正在播放的内容。
   const film = document.getElementById("film");
-  // 网页默认放 1080p（约 1.2 Mbps，国内访问也流畅）；4K 原画约 10 Mbps，网速够的人可以切换，播放位置保持不变
-  const SRC = { web: "media/Fuer-CN_Laendler-ueber-den-Wolken_1080p-web.mp4", master: "media/Fuer-CN_Laendler-ueber-den-Wolken_4K-master.mp4" };
-  const toggle = document.getElementById("toggle4k"), label = document.getElementById("quality");
-  let master = false;
-  toggle.addEventListener("click", () => {
-    const t = film.currentTime, playing = !film.paused;
-    master = !master;
-    film.src = master ? SRC.master : SRC.web;
-    label.textContent = master ? "4K 原画 · 需要约 10 Mbps 网速" : "1080p 流畅播放";
-    toggle.textContent = master ? "切回 1080p" : "切换到 4K 原画";
-    film.addEventListener("loadedmetadata", () => { film.currentTime = t; if (playing) film.play().catch(() => {}); }, { once: true });
-  });
+  const audio = document.getElementById("listen");
+  const filmLabel = document.getElementById("film-cache");
+  const audioLabel = document.getElementById("audio-cache");
+  const qualityLabel = document.getElementById("quality");
+  const toggle = document.getElementById("toggle4k");
 
-  // 一进页面就在后台把网页版视频和无损音频完整下载到内存；下完后换成内存里的副本，之后播放和拖动都不再等网络。
-  // 视频先下（约 9 MB），音频后下（约 17 MB）。正在播放时不打断，等暂停或播完再换。
-  async function cache(url, onProgress) {
-    const res = await fetch(url);
-    if (!res.ok || !res.body) throw new Error(res.status);
+  const PIN = "Hollis36/laendler-ueber-den-wolken@028fcab2c18f540305e50f4698751537a86c6443";
+  const FILES = Object.freeze({
+    video: "media/Fuer-CN_Laendler-ueber-den-Wolken_1080p-light.mp4",
+    audio: "media/Fuer-CN_Laendler-ueber-den-Wolken_320k.mp3",
+    master: "media/Fuer-CN_Laendler-ueber-den-Wolken_4K-master.mp4",
+  });
+  const MIRRORS = Object.freeze([
+    "",
+    `https://testingcf.jsdelivr.net/gh/${PIN}/`,
+    `https://fastly.jsdelivr.net/gh/${PIN}/`,
+    `https://cdn.jsdelivr.net/gh/${PIN}/`,
+    `https://gcore.jsdelivr.net/gh/${PIN}/`,
+  ]);
+  const PROBE_BYTES = 128 * 1024;
+  const PROBE_TIMEOUT_MS = 6000;
+
+  const state = { base: "", master: false, cached: { video: null, audio: null }, jobs: { video: null, audio: null } };
+
+  // 下载 url 的前 PROBE_BYTES 字节后中止，返回 base；失败则 reject
+  async function probe(base, signal) {
+    const res = await fetch(base + FILES.video, { signal, cache: "no-store" });
+    if (!res.ok || !res.body) throw new Error("probe " + res.status);
+    const reader = res.body.getReader();
+    let got = 0;
+    while (got < PROBE_BYTES) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      got += value.length;
+    }
+    reader.cancel().catch(() => {});
+    return base;
+  }
+
+  async function pickMirror() {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), PROBE_TIMEOUT_MS);
+    try {
+      return await Promise.any(MIRRORS.map((m) => probe(m, ctrl.signal)));
+    } catch (e) {
+      return "";
+    } finally {
+      clearTimeout(timer);
+      ctrl.abort();
+    }
+  }
+
+  async function download(url, signal, onProgress) {
+    const res = await fetch(url, { signal });
+    if (!res.ok || !res.body) throw new Error("download " + res.status);
     const total = Number(res.headers.get("content-length")) || 0;
     const reader = res.body.getReader();
     const parts = [];
@@ -195,6 +233,8 @@ footer .ded { font-size: 20px; }
     }
     return URL.createObjectURL(new Blob(parts, { type: res.headers.get("content-type") || "" }));
   }
+
+  // 换成内存副本；正在播放就等暂停后再换，不打断
   function adopt(media, blobUrl, labelEl) {
     const swap = () => {
       const t = media.currentTime;
@@ -203,21 +243,55 @@ footer .ded { font-size: 20px; }
       labelEl.textContent = "已缓存，可流畅播放";
     };
     if (media.paused) swap();
-    else { labelEl.textContent = "已缓存，暂停后切换"; media.addEventListener("pause", swap, { once: true }); }
+    else media.addEventListener("pause", swap, { once: true });
   }
-  (async () => {
-    const audio = document.getElementById("listen");
-    const filmLabel = document.getElementById("film-cache"), audioLabel = document.getElementById("audio-cache");
-    const pct = (el) => (r) => { el.textContent = "正在缓存 " + Math.round(r * 100) + "%"; };
+
+  function stopJob(kind, labelEl) {
+    const job = state.jobs[kind];
+    if (!job) return;
+    job.abort();
+    state.jobs = { ...state.jobs, [kind]: null };
+    labelEl.textContent = "边下边播";
+  }
+
+  async function cacheOne(kind, media, labelEl) {
+    if (state.cached[kind]) return;
+    if (!film.paused || !audio.paused) { labelEl.textContent = "边下边播"; return; }
+    const ctrl = new AbortController();
+    state.jobs = { ...state.jobs, [kind]: ctrl };
     try {
-      const v = await cache(SRC.web, pct(filmLabel));
-      if (!master) adopt(film, v, filmLabel); else filmLabel.textContent = "1080p 已缓存";
-      SRC.web = v;
-    } catch (e) { filmLabel.textContent = "边下边播"; }
-    try {
-      adopt(audio, await cache(audio.currentSrc || audio.src, pct(audioLabel)), audioLabel);
-    } catch (e) { audioLabel.textContent = "边下边播"; }
-  })();
+      const blobUrl = await download(state.base + FILES[kind], ctrl.signal, (r) => {
+        labelEl.textContent = "正在缓存 " + Math.round(r * 100) + "%";
+      });
+      state.cached = { ...state.cached, [kind]: blobUrl };
+      if (kind !== "video" || !state.master) adopt(media, blobUrl, labelEl);
+    } catch (e) {
+      if (!ctrl.signal.aborted) labelEl.textContent = "边下边播";
+    } finally {
+      if (state.jobs[kind] === ctrl) state.jobs = { ...state.jobs, [kind]: null };
+    }
+  }
+
+  // 点了播放：停掉所有未完成的后台缓存，另一个播放器暂停
+  function onPlay(other) {
+    stopJob("video", filmLabel);
+    stopJob("audio", audioLabel);
+    if (!other.paused) other.pause();
+  }
+  film.addEventListener("play", () => onPlay(audio));
+  audio.addEventListener("play", () => onPlay(film));
+
+  toggle.addEventListener("click", () => {
+    const t = film.currentTime, playing = !film.paused;
+    const master = !state.master;
+    state.master = master;
+    if (master) stopJob("video", filmLabel);
+    film.src = master ? FILES.master : (state.cached.video || state.base + FILES.video);
+    qualityLabel.textContent = master ? "4K 原画 · 需要约 10 Mbps 网速" : "1080p";
+    toggle.textContent = master ? "切回 1080p" : "切换到 4K 原画";
+    film.addEventListener("loadedmetadata", () => { film.currentTime = t; if (playing) film.play().catch(() => {}); }, { once: true });
+  });
+
   document.getElementById("movements").addEventListener("click", (e) => {
     const row = e.target.closest(".mv");
     if (!row) return;
@@ -225,6 +299,18 @@ footer .ded { font-size: 20px; }
     film.play().catch(() => {});
     film.scrollIntoView({ behavior: "smooth", block: "center" });
   });
+
+  (async () => {
+    filmLabel.textContent = audioLabel.textContent = "正在选择最快线路…";
+    const base = await pickMirror();
+    state.base = base;
+    // 还没开始播放才换线路；已经在播就保持原来的地址
+    if (film.paused && !state.master) film.src = base + FILES.video;
+    if (audio.paused) audio.src = base + FILES.audio;
+    filmLabel.textContent = audioLabel.textContent = film.paused ? "准备缓存" : "边下边播";
+    await cacheOne("video", film, filmLabel);
+    await cacheOne("audio", audio, audioLabel);
+  })();
 </script>
 </body>
 </html>
