@@ -28,6 +28,7 @@
 | `media/…_24bit-48kHz.wav` | 无损母带，24-bit / 48 kHz |
 | `media/…_320k.mp3` | MP3 320 kbps，内嵌封面 |
 | `media/…_4K-master.mp4` | 4K 演奏过程，3840 × 2160，H.264 High，AAC 320k |
+| `media/…_1080p-web.mp4` | 网页播放用，1080p，约 1.2 Mbps |
 
 同样的文件也附在 [Releases](https://github.com/Hollis36/laendler-ueber-den-wolken/releases) 中，另加一个封面版 MP4。
 

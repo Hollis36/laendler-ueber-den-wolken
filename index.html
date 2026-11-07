@@ -55,6 +55,8 @@ h2 .it { letter-spacing: .06em; font-size: 19px; margin-left: .6em; }
 .film { border-radius: 4px; overflow: hidden; box-shadow: 0 30px 80px -40px rgba(60, 50, 40, .35), 0 0 0 1px var(--hair); background: var(--pearl-hi); }
 .film video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; background: var(--pearl-hi); }
 .note { text-align: center; color: var(--stone); font-size: 14px; margin-top: 14px; }
+.q { font: inherit; color: var(--gold); background: none; border: 0; border-bottom: 1px solid var(--gold-soft); padding: 0 0 1px; cursor: pointer; }
+.q:hover, .q:focus-visible { color: var(--ink); outline: none; }
 
 .listen { max-width: 720px; margin: 0 auto; text-align: center; }
 .listen audio { width: 100%; margin-top: 4px; }
@@ -106,10 +108,10 @@ footer .ded { font-size: 20px; }
     <h2>演奏<span class="it">Esecuzione</span></h2>
     <div class="film">
       <video id="film" controls playsinline preload="metadata" poster="media/cover.jpg">
-        <source src="media/Fuer-CN_Laendler-ueber-den-Wolken_4K-master.mp4" type="video/mp4">
+        <source src="media/Fuer-CN_Laendler-ueber-den-Wolken_1080p-web.mp4" type="video/mp4">
       </video>
     </div>
-    <p class="note">4K · 3840 × 2160 · 总谱随音乐翻行</p>
+    <p class="note"><span id="quality">1080p 流畅播放</span> · 总谱随音乐翻行 · <button class="q" id="toggle4k" type="button">切换到 4K 原画</button></p>
   </section>
 
   <section aria-label="乐章">
@@ -168,6 +170,18 @@ footer .ded { font-size: 20px; }
 <script>
   // 点结构里的段落，视频跳到那里开始播放
   const film = document.getElementById("film");
+  // 网页默认放 1080p（约 1.2 Mbps，国内访问也流畅）；4K 原画约 10 Mbps，网速够的人可以切换，播放位置保持不变
+  const SRC = { web: "media/Fuer-CN_Laendler-ueber-den-Wolken_1080p-web.mp4", master: "media/Fuer-CN_Laendler-ueber-den-Wolken_4K-master.mp4" };
+  const toggle = document.getElementById("toggle4k"), label = document.getElementById("quality");
+  let master = false;
+  toggle.addEventListener("click", () => {
+    const t = film.currentTime, playing = !film.paused;
+    master = !master;
+    film.src = master ? SRC.master : SRC.web;
+    label.textContent = master ? "4K 原画 · 需要约 10 Mbps 网速" : "1080p 流畅播放";
+    toggle.textContent = master ? "切回 1080p" : "切换到 4K 原画";
+    film.addEventListener("loadedmetadata", () => { film.currentTime = t; if (playing) film.play().catch(() => {}); }, { once: true });
+  });
   document.getElementById("movements").addEventListener("click", (e) => {
     const row = e.target.closest(".mv");
     if (!row) return;
