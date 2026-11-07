@@ -3,6 +3,7 @@
 #   python3 render.py <piece> [<piece> ...]     例：python3 render.py godfather
 # 输出 ../成曲/<piece>.wav（48 kHz 24 bit），各声部干声在 ../成曲/分轨/。
 import importlib
+import os
 import subprocess
 import sys
 import tempfile
@@ -15,8 +16,8 @@ from room import add_room, impulse
 from score import Piece, to_midi
 
 HERE = Path(__file__).resolve().parent
-OUT = HERE.parent / "成曲"
-SFIZZ = Path.home() / "sfizz-src/build/library/bin/sfizz_render"
+OUT = Path(os.environ.get("RENDER_OUT", HERE.parent / "成曲"))  # 复现时由 reproduce.sh 设为 build/audio
+SFIZZ = Path(os.environ.get("SFIZZ", Path.home() / "sfizz-src/build/library/bin/sfizz_render"))
 RATE = 48000
 
 

@@ -151,8 +151,9 @@ def to_midi(piece: Piece, part: Part, path: str) -> None:
 
 
 # the sample sets (see 配乐/compose/README in memory): Salamander for piano, GeneralUser GS for the rest
-SALAMANDER = "~/soundfonts/SalamanderGrandPiano-SFZ+FLAC-V3+20200602/SalamanderGrandPiano-V3+20200602.sfz"
-GU = "~/soundfonts/GeneralUser-GS.sf2"
+SOUNDFONTS = __import__("os").environ.get("SOUNDFONTS", "~/soundfonts")  # where the sample libraries live
+SALAMANDER = f"{SOUNDFONTS}/SalamanderGrandPiano-SFZ+FLAC-V3+20200602/SalamanderGrandPiano-V3+20200602.sfz"
+GU = f"{SOUNDFONTS}/GeneralUser-GS.sf2"
 
 
 def legato(line: list[Note], overlap: float = 0.06) -> list[Note]:
@@ -160,4 +161,4 @@ def legato(line: list[Note], overlap: float = 0.06) -> list[Note]:
     return [Note(x.beat, x.dur + (overlap if i < len(line) - 1 else 0), x.pitch, x.vel) for i, x in enumerate(line)]
 
 
-VSCO = "~/soundfonts/VSCO-2-CE"
+VSCO = f"{SOUNDFONTS}/VSCO-2-CE"

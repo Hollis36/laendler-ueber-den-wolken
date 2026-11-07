@@ -105,11 +105,11 @@ footer .ded { font-size: 20px; }
   <section aria-label="演奏">
     <h2>演奏<span class="it">Esecuzione</span></h2>
     <div class="film">
-      <video id="film" controls playsinline preload="metadata" poster="media/cover.jpg">
+      <video id="film" controls playsinline preload="auto" poster="media/cover.jpg">
         <source src="media/Fuer-CN_Laendler-ueber-den-Wolken_1080p-web.mp4" type="video/mp4">
       </video>
     </div>
-    <p class="note"><span id="quality">1080p 流畅播放</span> · 总谱随音乐翻行 · <button class="q" id="toggle4k" type="button">切换到 4K 原画</button></p>
+    <p class="note"><span id="quality">1080p 流畅播放</span> · <span id="film-cache">正在缓存…</span> · 总谱随音乐翻行 · <button class="q" id="toggle4k" type="button">切换到 4K 原画</button></p>
   </section>
 
   <section aria-label="乐章">
@@ -130,8 +130,8 @@ footer .ded { font-size: 20px; }
   <section aria-label="聆听">
     <h2>聆听<span class="it">Ascolto</span></h2>
     <div class="listen">
-      <audio controls preload="none" src="media/Fuer-CN_Laendler-ueber-den-Wolken_24bit-48kHz.wav"></audio>
-      <p class="note">24-bit / 48 kHz 无损母带</p>
+      <audio id="listen" controls preload="auto" src="media/Fuer-CN_Laendler-ueber-den-Wolken_24bit-48kHz.wav"></audio>
+      <p class="note">24-bit / 48 kHz 无损母带 · <span id="audio-cache">正在缓存…</span></p>
     </div>
   </section>
 
@@ -176,6 +176,48 @@ footer .ded { font-size: 20px; }
     toggle.textContent = master ? "切回 1080p" : "切换到 4K 原画";
     film.addEventListener("loadedmetadata", () => { film.currentTime = t; if (playing) film.play().catch(() => {}); }, { once: true });
   });
+
+  // 一进页面就在后台把网页版视频和无损音频完整下载到内存；下完后换成内存里的副本，之后播放和拖动都不再等网络。
+  // 视频先下（约 9 MB），音频后下（约 17 MB）。正在播放时不打断，等暂停或播完再换。
+  async function cache(url, onProgress) {
+    const res = await fetch(url);
+    if (!res.ok || !res.body) throw new Error(res.status);
+    const total = Number(res.headers.get("content-length")) || 0;
+    const reader = res.body.getReader();
+    const parts = [];
+    let got = 0;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      parts.push(value);
+      got += value.length;
+      if (total) onProgress(got / total);
+    }
+    return URL.createObjectURL(new Blob(parts, { type: res.headers.get("content-type") || "" }));
+  }
+  function adopt(media, blobUrl, labelEl) {
+    const swap = () => {
+      const t = media.currentTime;
+      media.src = blobUrl;
+      media.addEventListener("loadedmetadata", () => { media.currentTime = t; }, { once: true });
+      labelEl.textContent = "已缓存，可流畅播放";
+    };
+    if (media.paused) swap();
+    else { labelEl.textContent = "已缓存，暂停后切换"; media.addEventListener("pause", swap, { once: true }); }
+  }
+  (async () => {
+    const audio = document.getElementById("listen");
+    const filmLabel = document.getElementById("film-cache"), audioLabel = document.getElementById("audio-cache");
+    const pct = (el) => (r) => { el.textContent = "正在缓存 " + Math.round(r * 100) + "%"; };
+    try {
+      const v = await cache(SRC.web, pct(filmLabel));
+      if (!master) adopt(film, v, filmLabel); else filmLabel.textContent = "1080p 已缓存";
+      SRC.web = v;
+    } catch (e) { filmLabel.textContent = "边下边播"; }
+    try {
+      adopt(audio, await cache(audio.currentSrc || audio.src, pct(audioLabel)), audioLabel);
+    } catch (e) { audioLabel.textContent = "边下边播"; }
+  })();
   document.getElementById("movements").addEventListener("click", (e) => {
     const row = e.target.closest(".mv");
     if (!row) return;

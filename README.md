@@ -41,6 +41,10 @@
 
 采样：弦乐与竖琴来自 VSCO 2 Community Edition；钢琴来自 Salamander Grand Piano V3（Alexander Holm，CC BY 3.0）。
 
+## 复现
+
+按 [REPRODUCE.md](REPRODUCE.md) 准备环境后运行 `./reproduce.sh`，即可从源码重新生成全部成品。
+
 ## 版权
 
 音乐、总谱与视频 © 2026，保留所有权利。
